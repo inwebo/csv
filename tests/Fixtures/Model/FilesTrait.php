@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Fixtures\Model;
+namespace Inwebo\Csv\Tests\Fixtures\Model;
 
 trait FilesTrait
 {
@@ -29,5 +29,10 @@ trait FilesTrait
     public function getExampleFile(): string
     {
         return (new \SplFileObject(__DIR__.'/../example.csv'))->getRealPath();
+    }
+
+    public function getMalformedFile(): string
+    {
+        return (new \SplFileObject(__DIR__.'/../malformed.csv'))->getRealPath();
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Model;
+namespace Inwebo\Csv\Tests\Model;
 
 use Inwebo\Csv\Model\FiltersQueue;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -24,5 +24,16 @@ class FiltersQueueTest extends TestCase
         $queue->rewind();
         $bool = $queue->filter([1, 2, 3]);
         $this->assertFalse($bool);
+    }
+
+    public function testClear(): void
+    {
+        $queue = new FiltersQueue();
+        $queue->push(fn (array $row) => true);
+        $queue->push(fn (array $row) => false);
+        $this->assertEquals(2, $queue->count());
+
+        $queue->clear();
+        $this->assertEquals(0, $queue->count());
     }
 }

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Iterate;
+namespace Inwebo\Csv\Tests\Iterate;
 
 use Inwebo\Csv\Model\FiltersQueue;
 use Inwebo\Csv\Model\NormalizersQueue;
 use Inwebo\Csv\Reader;
-use Inwebo\CSV\Reader\Tests\Fixtures\Model\FilesTrait;
-use Inwebo\CSV\Reader\Tests\Fixtures\Model\HasReaderTrait;
+use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
+use Inwebo\Csv\Tests\Fixtures\Model\HasReaderTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;

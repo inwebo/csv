@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Iterate;
+namespace Inwebo\Csv\Tests\Iterate;
 
 use Inwebo\Csv\Reader;
-use Inwebo\CSV\Reader\Tests\Fixtures\Model\FilesTrait;
-use Inwebo\CSV\Reader\Tests\Fixtures\Model\HasReaderTrait;
+use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
+use Inwebo\Csv\Tests\Fixtures\Model\HasReaderTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -60,5 +60,16 @@ class ReadWithoutHeaderTest extends TestCase
         $this->assertEquals('Charles', $line['Firstname']);
         $this->assertEquals('de Gaulle', $line['Lastname']);
         $this->assertEquals('', $line['Email']);
+    }
+
+    public function testRows(): void
+    {
+        $rows = iterator_to_array($this->getReader()->rows());
+
+        $this->assertCount(8, $rows);
+        $this->assertEquals(1, $rows[0][0]);
+        $this->assertEquals('Charles', $rows[0][1]);
+        $this->assertEquals(8, $rows[7][0]);
+        $this->assertEquals('Emmanuel', $rows[7][1]);
     }
 }

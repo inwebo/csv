@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Model;
+namespace Inwebo\Csv\Tests\Model;
 
 use Inwebo\Csv\Model\NormalizersQueue;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(NormalizersQueue::class)]
 class NormalizersQueueTest extends TestCase
 {
-    public function testFilter(): void
+    public function testNormalize(): void
     {
         $queue = new NormalizersQueue();
         $queue->push(fn (array $row) => $row);
@@ -19,5 +19,16 @@ class NormalizersQueueTest extends TestCase
         $row = [1, 2, 3];
         $queue->normalize($row);
         $this->assertIsArray($row);
+    }
+
+    public function testClear(): void
+    {
+        $queue = new NormalizersQueue();
+        $queue->push(fn (array &$row) => null);
+        $queue->push(fn (array &$row) => null);
+        $this->assertEquals(2, $queue->count());
+
+        $queue->clear();
+        $this->assertEquals(0, $queue->count());
     }
 }

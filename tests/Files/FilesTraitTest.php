@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Files;
+namespace Inwebo\Csv\Tests\Files;
 
-use Inwebo\CSV\Reader\Tests\Fixtures\Model\FilesTrait;
+use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
 use PHPUnit\Framework\TestCase;
 
 class FilesTraitTest extends TestCase
@@ -34,5 +34,10 @@ class FilesTraitTest extends TestCase
     public function testExampleFile(): void
     {
         $this->assertFileExists($this->getExampleFile());
+    }
+
+    public function testGetMalformedFile(): void
+    {
+        $this->assertFileExists($this->getMalformedFile());
     }
 }

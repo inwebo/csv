@@ -151,10 +151,7 @@ class Reader extends \SplFileObject
         /** @var array<int|string, mixed>|false $row */
         $row = ($this->hasHeaders) ? $this->fgetcsv(escape: '\\') : $this->current();
         if (false !== $row) {
-            $row = ($this->hasHeaders) ?
-                array_combine($this->headers, $row) :
-                $this->setHeadersRow($row)
-            ;
+            $row = $this->setHeadersRow($row);
 
             $filteredLine = $this->filter($row);
 
@@ -177,7 +174,7 @@ class Reader extends \SplFileObject
      */
     public function clearNormalizers(): self
     {
-        $this->normalizersQueue = new NormalizersQueue();
+        $this->normalizersQueue->clear();
 
         return $this;
     }
@@ -204,8 +201,8 @@ class Reader extends \SplFileObject
      */
     protected function normalize(array &$row): void
     {
-        $isEmpty = $this->normalizersQueue->count() > 0;
-        if (true === $isEmpty) {
+        $hasItems = $this->normalizersQueue->count() > 0;
+        if (true === $hasItems) {
             $this->normalizersQueue->rewind();
             while ($this->normalizersQueue->valid()) {
                 $this->normalizersQueue->normalize($row);
@@ -225,11 +222,11 @@ class Reader extends \SplFileObject
     protected function filter(array $row): ?array
     {
         $isValid = true;
-        $isEmpty = $this->filtersQueue->count() > 0;
-        if (true === $isEmpty) {
+        $hasItems = $this->filtersQueue->count() > 0;
+        if (true === $hasItems) {
             $this->filtersQueue->rewind();
             while ($this->filtersQueue->valid()) {
-                $isValid &= $this->filtersQueue->filter($row);
+                $isValid = $isValid && $this->filtersQueue->filter($row);
                 $this->filtersQueue->next();
             }
         }
@@ -248,7 +245,7 @@ class Reader extends \SplFileObject
      */
     public function clearFilters(): self
     {
-        $this->filtersQueue = new FiltersQueue();
+        $this->filtersQueue->clear();
 
         return $this;
     }
@@ -271,7 +268,7 @@ class Reader extends \SplFileObject
      */
     protected function getRelativeOffset(int $offset): int
     {
-        return ($this->hasHeaders()) ? --$offset : $offset;
+        return ($this->hasHeaders()) ? $offset - 1 : $offset;
     }
 
     /**
@@ -287,6 +284,13 @@ class Reader extends \SplFileObject
 
         if (null === $to && is_int($from)) {
             throw new \InvalidArgumentException('The $from parameter must be null when $to is null');
+        }
+
+        if (is_int($from)) {
+            $minimum = $this->hasHeaders ? 1 : 0;
+            if ($from < $minimum) {
+                throw new \InvalidArgumentException(sprintf('The $from parameter must be >= %d', $minimum));
+            }
         }
 
         if (is_int($to) && $from > $to) {
@@ -305,6 +309,13 @@ class Reader extends \SplFileObject
     {
         $this->validateInput($from, $to);
 
+        if (null === $from) {
+            $this->rewind();
+            if ($this->hasHeaders) {
+                $this->current(); // position READ_AHEAD buffer past the header
+            }
+        }
+
         $offset = (null !== $from) ? $this->getRelativeOffset($from) : null;
 
         while ($this->valid()) {
@@ -320,9 +331,9 @@ class Reader extends \SplFileObject
                 if ($offset >= $to) {
                     break;
                 }
+            } elseif (!$this->hasHeaders) {
+                $this->next();
             }
         }
-
-        $this->rewind();
     }
 }
