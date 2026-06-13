@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Example;
+namespace Inwebo\Csv\Tests\Example;
 
 use Inwebo\Csv\Model\FiltersQueue;
 use Inwebo\Csv\Model\NormalizersQueue;
 use Inwebo\Csv\Reader;
-use Inwebo\CSV\Reader\Tests\Fixtures\Model\FilesTrait;
+use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

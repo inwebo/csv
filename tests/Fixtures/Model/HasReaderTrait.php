@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Fixtures\Model;
+namespace Inwebo\Csv\Tests\Fixtures\Model;
 
 use Inwebo\Csv\Reader;
 

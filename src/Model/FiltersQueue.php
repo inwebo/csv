@@ -13,7 +13,7 @@ namespace Inwebo\Csv\Model;
  *
  * @phpstan-return callable(array<int|string, mixed>):bool
  */
-class FiltersQueue extends \SplQueue
+class FiltersQueue extends \SplQueue implements ClearableInterface
 {
     /**
      * @return callable(array<int|string, mixed>):bool
@@ -30,5 +30,12 @@ class FiltersQueue extends \SplQueue
     public function filter(array $row): bool
     {
         return call_user_func($this->current(), $row);
+    }
+
+    public function clear(): void
+    {
+        while (!$this->isEmpty()) {
+            $this->dequeue();
+        }
     }
 }

@@ -13,7 +13,7 @@ namespace Inwebo\Csv\Model;
  *
  * @phpstan-return callable(array<int|string, mixed>):void
  */
-class NormalizersQueue extends \SplQueue
+class NormalizersQueue extends \SplQueue implements ClearableInterface
 {
     /**
      * @return callable(array<int|string, mixed>):void
@@ -30,5 +30,12 @@ class NormalizersQueue extends \SplQueue
     public function normalize(array &$row): void
     {
         call_user_func_array($this->current(), [&$row]);
+    }
+
+    public function clear(): void
+    {
+        while (!$this->isEmpty()) {
+            $this->dequeue();
+        }
     }
 }

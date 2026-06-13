@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Exception;
+namespace Inwebo\Csv\Tests\Exception;
 
 use Inwebo\Csv\Reader;
-use Inwebo\CSV\Reader\Tests\Fixtures\Model\FilesTrait;
+use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -42,5 +42,25 @@ class ReaderExceptionTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The $from parameter must be less than or equal to $to');
         $rows = $rows->current();
+    }
+
+    public function testExceptionFromZeroWithHeaders(): void
+    {
+        $reader = new Reader($this->getWithHeaderFile(), hasHeaders: true);
+
+        $rows = $reader->rows(0, 2);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The $from parameter must be >= 1');
+        $rows->current();
+    }
+
+    public function testExceptionFromNegativeWithoutHeaders(): void
+    {
+        $reader = new Reader($this->getWithoutHeaderFile(), hasHeaders: false);
+
+        $rows = $reader->rows(-1, 2);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The $from parameter must be >= 0');
+        $rows->current();
     }
 }

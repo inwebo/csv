@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests\Instance;
+namespace Inwebo\Csv\Tests\Instance;
 
 use Inwebo\Csv\Reader;
-use Inwebo\CSV\Reader\Tests\Fixtures\Model\FilesTrait;
+use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
@@ -43,5 +43,19 @@ class InstantiateTest extends TestCase
         $rows = iterator_to_array($reader->rows());
 
         $this->assertCount(0, $rows);
+    }
+
+    public function testMalformedCsvRow(): void
+    {
+        $reader = new Reader($this->getMalformedFile());
+        $rows = iterator_to_array($reader->rows());
+
+        $this->assertCount(2, $rows);
+        $this->assertEquals('1', $rows[0]['Id']);
+        $this->assertEquals('Charles', $rows[0]['Firstname']);
+        $this->assertNull($rows[0]['Lastname']);
+        $this->assertNull($rows[0]['Email']);
+        $this->assertEquals('Georges', $rows[1]['Firstname']);
+        $this->assertEquals('Pompidou', $rows[1]['Lastname']);
     }
 }

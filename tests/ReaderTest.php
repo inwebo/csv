@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\CSV\Reader\Tests;
+namespace Inwebo\Csv\Tests;
 
 use Inwebo\Csv\Reader;
-use Inwebo\CSV\Reader\Tests\Fixtures\Model\FilesTrait;
+use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
