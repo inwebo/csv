@@ -1,4 +1,5 @@
-yamlversion: 2
+---
+version: 2
 updates:
     - package-ecosystem: "composer"
       directory: "/"
@@ -6,10 +7,8 @@ updates:
           interval: "weekly"
           day: "monday"
       open-pull-requests-limit: 10
-      versioning-strategy: increase-if-necessary
       labels:
           - "dependencies"
       ignore:
-          # Ignorer les mises à jour majeures
           - dependency-name: "*"
             update-types: ["version-update:semver-major"]
