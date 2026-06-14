@@ -11,6 +11,7 @@
 * Mise à jour du README.md avec plus de détails et d'exemples
 * Améliorations mineures
 * Update back dependencies
+* Simplification Reader::normalize(), Reader::filter()
 
 ## 1.1.0
 
