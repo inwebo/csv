@@ -31,6 +31,8 @@ class Reader extends \SplFileObject
     /**
      * Creates a new instance of the Reader class and initializes the CSV file for processing.
      * It sets the file's flags to \SplFileObject::READ_CSV | \SplFileObject::SKIP_EMPTY | \SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD for proper CSV parsing.
+     * This means the file is read as CSV, empty lines are skipped, newlines at the end of lines are removed, and the file is read ahead.
+     * The instance remains fully configurable using all \SplFileObject methods (e.g. setCsvControl, setFlags).
      * If the $hasColName parameter is true, it reads the first row of the file to use as column headers for subsequent rows.
      *
      * @param string   $filename       The file to open
@@ -51,11 +53,11 @@ class Reader extends \SplFileObject
         mixed $context = null,
         private readonly bool $hasHeaders = true,
     ) {
-        $this->normalizersQueue = new NormalizersQueue();
-        $this->filtersQueue = new FiltersQueue();
-
         parent::__construct($filename, $mode, $useIncludePath, $context);
         $this->setFlags(\SplFileObject::READ_CSV | \SplFileObject::SKIP_EMPTY | \SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD);
+
+        $this->normalizersQueue = new NormalizersQueue();
+        $this->filtersQueue = new FiltersQueue();
 
         if (true === $this->hasHeaders) {
             /** @var array<int, string>|false|string $colName */
@@ -212,33 +214,6 @@ class Reader extends \SplFileObject
     }
 
     /**
-     * Applies all registered filter functions to the given line.
-     * If any of the filter functions returns false, the line is considered invalid, and the method returns null.
-     *
-     * @param array<int|string, mixed> $row
-     *
-     * @return array<int|string, mixed>|null
-     */
-    protected function filter(array $row): ?array
-    {
-        $isValid = true;
-        $hasItems = $this->filtersQueue->count() > 0;
-        if (true === $hasItems) {
-            $this->filtersQueue->rewind();
-            while ($this->filtersQueue->valid()) {
-                $isValid = $isValid && $this->filtersQueue->filter($row);
-                $this->filtersQueue->next();
-            }
-        }
-
-        if ($isValid) {
-            return $row;
-        }
-
-        return null;
-    }
-
-    /**
      * Clear all registered filters.
      *
      * @return $this
@@ -263,6 +238,37 @@ class Reader extends \SplFileObject
         return $this;
     }
 
+
+    /**
+     * Applies all registered filter functions to the given line.
+     * If any of the filter functions returns false, the line is considered invalid, and the method returns null.
+     *
+     * @param array<int|string, mixed> $row
+     *
+     * @return array<int|string, mixed>|null
+     */
+    protected function filter(array $row): ?array
+    {
+        $isValid = true;
+        $hasItems = $this->filtersQueue->count() > 0;
+        if (true === $hasItems) {
+            $this->filtersQueue->rewind();
+            while ($this->filtersQueue->valid()) {
+                $isValid = $isValid && $this->filtersQueue->filter($row);
+                $this->filtersQueue->next();
+                if (!$isValid) {
+                    return null;
+                }
+            }
+        }
+
+        if ($isValid) {
+            return $row;
+        }
+
+        return null;
+    }
+
     /**
      * Get the relative offset for the given offset, accounting for headers.
      */
@@ -285,7 +291,7 @@ class Reader extends \SplFileObject
         if (null === $to && is_int($from)) {
             throw new \InvalidArgumentException('The $from parameter must be null when $to is null');
         }
-
+        // Pas sur
         if (is_int($from)) {
             $minimum = $this->hasHeaders ? 1 : 0;
             if ($from < $minimum) {
