@@ -1,0 +1,63 @@
+name: Tag and update CHANGELOG
+
+on:
+    pull_request:
+        types: [closed]
+        branches: [main]
+
+permissions:
+    contents: write
+
+jobs:
+    tag-and-changelog:
+        runs-on: ubuntu-latest
+        if: |
+            github.event.pull_request.merged == true &&
+            github.event.pull_request.user.login == 'dependabot[bot]'
+
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Récupérer le dernier tag
+              id: last_tag
+              run: |
+                  TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+                  echo "tag=${TAG:-v0.0.0}" >> $GITHUB_OUTPUT
+
+            - name: Calculer le nouveau tag patch
+              id: new_tag
+              run: |
+                  TAG="${{ steps.last_tag.outputs.tag }}"
+                  MAJOR=$(echo "$TAG" | cut -d. -f1 | tr -d 'v')
+                  MINOR=$(echo "$TAG" | cut -d. -f2)
+                  PATCH=$(echo "$TAG" | cut -d. -f3)
+                  NEW_PATCH=$((PATCH + 1))
+                  echo "tag=v${MAJOR}.${MINOR}.${NEW_PATCH}" >> $GITHUB_OUTPUT
+
+            - name: Mettre à jour CHANGELOG.md
+              run: |
+                  NEW_TAG="${{ steps.new_tag.outputs.tag }}"
+                  DATE=$(date +%Y-%m-%d)
+                  ENTRY="## ${NEW_TAG} - ${DATE}\n\nUpdate back dependencies\n"
+                  
+                  if [ -f CHANGELOG.md ]; then
+                    echo -e "${ENTRY}\n$(cat CHANGELOG.md)" > CHANGELOG.md
+                  else
+                    echo -e "${ENTRY}" > CHANGELOG.md
+                  fi
+
+            - name: Committer le CHANGELOG
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add CHANGELOG.md
+                  git commit -m "chore: update CHANGELOG for ${{ steps.new_tag.outputs.tag }}"
+                  git push
+
+            - name: Créer le tag Git
+              run: |
+                  git tag ${{ steps.new_tag.outputs.tag }}
+                  git push origin ${{ steps.new_tag.outputs.tag }}
