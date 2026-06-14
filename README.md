@@ -17,7 +17,7 @@ Since it extends `\SplFileObject`, all methods to configure CSV reading (like `s
 * **Column Name Mapping**: Automatically maps each line's data to an associative array using the CSV header as keys, making your code more readable and maintainable.
 * **Data Normalization**: Apply one or more callable functions to each line to clean and format the data before it's used.
 * **Data Filtering**: Use callable functions to validate and filter out rows that don't meet your criteria.
-* **Generator-based Iteration**: Process large files efficiently using a `Generator` to iterate over lines without consuming too much memory.
+* **Generator-based Iteration**: Process large files efficiently using a `Generator` to iterate over lines without consuming too much memory. Iteration always starts with a `rewind()`.
 * **Inherits `SplFileObject`**: Leverage all the native features and performance benefits of `SplFileObject` for file handling.
 
 -----
@@ -45,7 +45,7 @@ Since it extends `\SplFileObject`, all methods to configure CSV reading (like `s
 
 #### Basic Reading
 
-To get started, simply instantiate the `Reader` class with the path to your CSV file. By default, it assumes the first row contains column names.
+To get started, simply instantiate the `Reader` class with the path to your CSV file. By default, it assumes the first row contains column names, and data starts at index `1`.
 
 ```php
 use Inwebo\Csv\Reader;
@@ -61,7 +61,7 @@ foreach ($reader->rows() as $row) {
 
 #### Disabling Column Names
 
-If your CSV file does not have a header row, you can disable the column name mapping by setting the `hasHeaders` parameter to `false`.
+If your CSV file does not have a header row, you can disable the column name mapping by setting the `hasHeaders` parameter to `false`. In this case, indices start at `0`.
 
 ```php
 use Inwebo\Csv\Reader;
@@ -78,7 +78,7 @@ foreach ($reader->rows() as $row) {
 
 #### Manual Column Mapping
 
-For files without a header, you can manually define column names using the `setHeader()` method. This allows you to treat the data as an associative array even without a header row.
+For files without a header, you can manually define column names using the `setHeader()` method. This allows you to treat the data as an associative array even without a header row. Indices start at `0`.
 
 ```php
 use Inwebo\Csv\Reader;
@@ -101,11 +101,11 @@ foreach ($reader->rows() as $row) {
 
 ### Advanced Usage: Normalizers and Filters
 
-You can add multiple normalizers and filters to your `Reader` instance. They are executed sequentially in the order they are added.
+You can add multiple normalizers and filters to your `Reader` instance. They are executed sequentially in the order they are added (FIFO).
 
 #### Normalizers
 
-Normalizers are used to modify the data. The callback receives the line array by reference, allowing you to directly alter its values.
+Normalizers are used to modify the data. The callback receives the line array by reference, allowing you to directly alter its values. They are executed sequentially in the order they are added (FIFO).
 
 ```php
 use Inwebo\Csv\Reader;
@@ -171,7 +171,10 @@ foreach ($reader->rows() as $row) {
 
 #### Reading a Specific Range
 
-You can also read a specific range of rows using the `rows()` method with `from` and `to` parameters.
+You can also read a specific range of rows using the `rows()` method with `from` and `to` parameters. Both parameters must be provided together or both omitted.
+
+> [!IMPORTANT]
+> When `hasHeaders` is `true` (default), the first data row is at index `1`. When `false`, it starts at `0`.
 
 ```php
 use Inwebo\Csv\Reader;
@@ -186,7 +189,7 @@ foreach ($reader->rows(from: 10, to: 20) as $row) {
 
 #### Reading a Specific Row
 
-The `rowAt()` method allows you to retrieve a specific row by its index.
+The `rowAt()` method allows you to retrieve a specific row by its index. If the row contains missing columns compared to the header, they will be returned as `null`.
 
 ```php
 use Inwebo\Csv\Reader;
@@ -260,11 +263,13 @@ foreach ($reader->rows() as $row) {
 }
 
 // Example 2: Men with salary > 22,500
-$reader->clearFilters(); // Clear previous filters if needed
-// Re-apply common filters if necessary or create a new reader instance
+$reader->clearFilters(); // Clear previous filters
 
-$reader = new Reader('tests/Fixtures/example.csv');
-// ... re-apply normalizers and email filter ...
+// Re-apply common filters
+$reader->pushFilter(function (array $row): bool {
+    return filter_var($row['Email'], FILTER_VALIDATE_EMAIL) !== false;
+});
+
 $reader->pushFilter(function (array $row): bool {
     return $row['Gender'] === 'M' && (int)$row['Salary'] > 22500;
 });

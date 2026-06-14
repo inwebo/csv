@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 1.1.1
+
+### Added
+* Configuration de Dependabot pour les mises à jour automatiques
+* Workflow GitHub Actions pour l'auto-merge de Dependabot
+* Workflow GitHub Actions pour le taggage automatique et la mise à jour du CHANGELOG
+
+### Changed
+* Mise à jour du README.md avec plus de détails et d'exemples
+* Améliorations mineures
+* Update back dependencies
+
 ## 1.1.0
 
 ### Added
