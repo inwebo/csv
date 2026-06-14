@@ -203,8 +203,7 @@ class Reader extends \SplFileObject
      */
     protected function normalize(array &$row): void
     {
-        $hasItems = $this->normalizersQueue->count() > 0;
-        if (true === $hasItems) {
+        if ($this->normalizersQueue->isNotEmpty()) {
             $this->normalizersQueue->rewind();
             while ($this->normalizersQueue->valid()) {
                 $this->normalizersQueue->normalize($row);
@@ -238,7 +237,6 @@ class Reader extends \SplFileObject
         return $this;
     }
 
-
     /**
      * Applies all registered filter functions to the given line.
      * If any of the filter functions returns false, the line is considered invalid, and the method returns null.
@@ -249,24 +247,17 @@ class Reader extends \SplFileObject
      */
     protected function filter(array $row): ?array
     {
-        $isValid = true;
-        $hasItems = $this->filtersQueue->count() > 0;
-        if (true === $hasItems) {
+        if ($this->filtersQueue->isNotEmpty()) {
             $this->filtersQueue->rewind();
             while ($this->filtersQueue->valid()) {
-                $isValid = $isValid && $this->filtersQueue->filter($row);
-                $this->filtersQueue->next();
-                if (!$isValid) {
+                if (!$this->filtersQueue->filter($row)) {
                     return null;
                 }
+                $this->filtersQueue->next();
             }
         }
 
-        if ($isValid) {
-            return $row;
-        }
-
-        return null;
+        return $row;
     }
 
     /**

@@ -38,4 +38,9 @@ class NormalizersQueue extends \SplQueue implements ClearableInterface
             $this->dequeue();
         }
     }
+
+    public function isNotEmpty(): bool
+    {
+        return !$this->isEmpty();
+    }
 }
