@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 namespace Inwebo\Csv\Tests\Iterate;
 
+use Inwebo\Csv\Model\Filters\FiltersQueue;
+use Inwebo\Csv\Model\Normalizers\NormalizersQueue;
 use Inwebo\Csv\Reader;
 use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
 use Inwebo\Csv\Tests\Fixtures\Model\HasReaderTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Reader::class)]
+#[UsesClass(FiltersQueue::class)]
+#[UsesClass(NormalizersQueue::class)]
 #[Group('csv')]
 #[Group('without-header')]
 class ReadWithoutHeaderTest extends TestCase

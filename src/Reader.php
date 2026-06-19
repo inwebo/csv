@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Inwebo\Csv;
 
-use Inwebo\Csv\Model\FiltersQueue;
-use Inwebo\Csv\Model\NormalizersQueue;
+use Inwebo\Csv\Exception\InvalidRangeException;
+use Inwebo\Csv\Model\Filters\FiltersQueue;
+use Inwebo\Csv\Model\Filters\HasFiltersQueueInterface;
+use Inwebo\Csv\Model\Filters\HasFiltersQueueTrait;
+use Inwebo\Csv\Model\Normalizers\HasNormalizersQueueInterface;
+use Inwebo\Csv\Model\Normalizers\HasNormalizersQueueTrait;
+use Inwebo\Csv\Model\Normalizers\NormalizersQueue;
+use Inwebo\Csv\Model\ReaderInterface;
 
 /**
  * The Reader class extends \SplFileObject to provide a more convenient way to read and process CSV files.
@@ -13,33 +19,28 @@ use Inwebo\Csv\Model\NormalizersQueue;
  * apply custom filters to skip certain rows, and use sanitizers to clean or modify data.
  * This object-oriented approach makes CSV file processing more structured and manageable.
  */
-class Reader extends \SplFileObject
+class Reader extends \SplFileObject implements HasFiltersQueueInterface, HasNormalizersQueueInterface, ReaderInterface
 {
+    use HasFiltersQueueTrait;
+    use HasNormalizersQueueTrait;
+
+    private const REQUIRED_FLAGS = \SplFileObject::READ_CSV | \SplFileObject::SKIP_EMPTY | \SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD;
+
     /** @var array<int, string> */
     private array $headers = [];
 
-    /**
-     * @var NormalizersQueue<callable(array<int|string, ?string> &$row):void>
-     */
-    private NormalizersQueue $normalizersQueue;
-
-    /**
-     * @var FiltersQueue<callable(array<int|string, ?string>):bool>
-     */
-    private FiltersQueue $filtersQueue;
+    private readonly bool $hasHeaders;
 
     /**
      * Creates a new instance of the Reader class and initializes the CSV file for processing.
      * It sets the file's flags to \SplFileObject::READ_CSV | \SplFileObject::SKIP_EMPTY | \SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD for proper CSV parsing.
-     * This means the file is read as CSV, empty lines are skipped, newlines at the end of lines are removed, and the file is read ahead.
-     * The instance remains fully configurable using all \SplFileObject methods (e.g. setCsvControl, setFlags).
+     * This means the file is read as CSV, empty lines are skipped, newlines at the end of lines iis removed, and the file is read ahead.
+     * The instance remains configurable via \SplFileObject methods (e.g. setCsvControl). Calling setFlags() is allowed only if READ_CSV|SKIP_EMPTY|DROP_NEW_LINE|READ_AHEAD are preserved.
      * If the $hasColName parameter is true, it reads the first row of the file to use as column headers for subsequent rows.
      *
-     * @param string   $filename       The file to open
-     * @param string   $mode           [optional] The mode in which to open the file. See {@see fopen} for a list of allowed modes.
-     * @param bool     $useIncludePath [optional] Whether to search in the include_path for filename
-     * @param resource $context        [optional] A valid context resource created with {@see stream_context_create}
-     * @param bool     $hasHeaders     [optional] parameter is true, it reads the first row of the file to use as column headers for subsequent rows
+     * @param string $filename       The file to open
+     * @param bool   $useIncludePath [optional] Whether to search in the include_path for filename
+     * @param bool   $hasHeaders     [optional] parameter is true, it reads the first row of the file to use as column headers for subsequent rows
      *
      * @throws \LogicException   When the filename is a directory
      * @throws \RuntimeException When the filename cannot be opened
@@ -48,16 +49,15 @@ class Reader extends \SplFileObject
      */
     public function __construct(
         string $filename,
-        string $mode = 'r',
         bool $useIncludePath = false,
-        mixed $context = null,
-        private readonly bool $hasHeaders = true,
+        bool $hasHeaders = true,
     ) {
-        parent::__construct($filename, $mode, $useIncludePath, $context);
+        parent::__construct($filename, 'r', $useIncludePath);
         $this->setFlags(\SplFileObject::READ_CSV | \SplFileObject::SKIP_EMPTY | \SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD);
 
         $this->normalizersQueue = new NormalizersQueue();
         $this->filtersQueue = new FiltersQueue();
+        $this->hasHeaders = $hasHeaders;
 
         if (true === $this->hasHeaders) {
             /** @var array<int, string>|false|string $colName */
@@ -69,45 +69,25 @@ class Reader extends \SplFileObject
         }
     }
 
-    /**
-     * @return NormalizersQueue<callable(array<int|string, ?string> &$row):void>
-     */
-    public function getNormalizersQueue(): NormalizersQueue
+    public function setFlags(int $flags): void
     {
-        return $this->normalizersQueue;
+        if ((self::REQUIRED_FLAGS & $flags) !== self::REQUIRED_FLAGS) {
+            throw new \BadMethodCallException(sprintf('Reader requires flags READ_CSV|SKIP_EMPTY|DROP_NEW_LINE|READ_AHEAD. Missing: 0x%x', self::REQUIRED_FLAGS & ~$flags));
+        }
+
+        parent::setFlags($flags);
     }
 
-    /**
-     * @return FiltersQueue<callable(array<int|string, ?string>):bool>
-     */
-    public function getFiltersQueue(): FiltersQueue
-    {
-        return $this->filtersQueue;
-    }
-
-    /**
-     * @return bool True if the file has headers
-     */
     public function hasHeaders(): bool
     {
         return $this->hasHeaders;
     }
 
-    /**
-     * Returns the array of column headers. This array is populated during the constructor if $hasHeader is true.
-     *
-     * @return array<int, string>
-     */
     public function getHeaders(): array
     {
         return $this->headers;
     }
 
-    /**
-     * Allows you to modify or define the name of a column using its numerical index.
-     * This method is useful for CSV files without a header row,
-     * where you want to assign column names to process the data as an associative array.
-     */
     public function setHeader(int $index, string $colName): static
     {
         $this->headers[$index] = $colName;
@@ -137,13 +117,6 @@ class Reader extends \SplFileObject
         return $buffer;
     }
 
-    /**
-     * Description: Reads a specific line from the CSV file.
-     * You can specify a line number with the $offset or read the current line if $offset is null.
-     * It applies all defined sanitizers and filters before returning the line.
-     *
-     * @return array<int|string, mixed>|false false at EOF
-     */
     public function rowAt(?int $offset = null): array|false
     {
         if (null !== $offset) {
@@ -170,97 +143,6 @@ class Reader extends \SplFileObject
     }
 
     /**
-     * Clear all registered normalizers.
-     *
-     * @return $this
-     */
-    public function clearNormalizers(): self
-    {
-        $this->normalizersQueue->clear();
-
-        return $this;
-    }
-
-    /**
-     * Adds a callable function to the list of sanitizers. This function will be applied to every line read to clean or modify its data.
-     * C'est un normalizer.
-     *
-     * @param callable(array<int|string, ?string> &$row):void $callable
-     *
-     * @return $this
-     */
-    public function pushNormalizer(callable $callable): self
-    {
-        $this->normalizersQueue->push($callable);
-
-        return $this;
-    }
-
-    /**
-     * Applies all registered sanitizer functions to the given line. This method is used internally by lineAt and modifies the $row array in place.
-     *
-     * @param array<int|string, mixed> $row
-     */
-    protected function normalize(array &$row): void
-    {
-        if ($this->normalizersQueue->isNotEmpty()) {
-            $this->normalizersQueue->rewind();
-            while ($this->normalizersQueue->valid()) {
-                $this->normalizersQueue->normalize($row);
-                $this->normalizersQueue->next();
-            }
-        }
-    }
-
-    /**
-     * Clear all registered filters.
-     *
-     * @return $this
-     */
-    public function clearFilters(): self
-    {
-        $this->filtersQueue->clear();
-
-        return $this;
-    }
-
-    /**
-     * Adds a callable function to the list of filters.
-     * This function will be applied to every line to determine if it should be included in the results.
-     *
-     * @param callable(array<int|string, mixed> $row):bool $callable
-     */
-    public function pushFilter(callable $callable): self
-    {
-        $this->filtersQueue->push($callable);
-
-        return $this;
-    }
-
-    /**
-     * Applies all registered filter functions to the given line.
-     * If any of the filter functions returns false, the line is considered invalid, and the method returns null.
-     *
-     * @param array<int|string, mixed> $row
-     *
-     * @return array<int|string, mixed>|null
-     */
-    protected function filter(array $row): ?array
-    {
-        if ($this->filtersQueue->isNotEmpty()) {
-            $this->filtersQueue->rewind();
-            while ($this->filtersQueue->valid()) {
-                if (!$this->filtersQueue->filter($row)) {
-                    return null;
-                }
-                $this->filtersQueue->next();
-            }
-        }
-
-        return $row;
-    }
-
-    /**
      * Get the relative offset for the given offset, accounting for headers.
      */
     protected function getRelativeOffset(int $offset): int
@@ -271,64 +153,58 @@ class Reader extends \SplFileObject
     /**
      * Validate the range input for the row's generator.
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidRangeException
      */
     protected function validateInput(?int $from = null, ?int $to = null): void
     {
         if (null === $from && is_int($to)) {
-            throw new \InvalidArgumentException('The $to parameter must be null when $from is null');
+            throw new InvalidRangeException('The $to parameter must be null when $from is null');
         }
 
         if (null === $to && is_int($from)) {
-            throw new \InvalidArgumentException('The $from parameter must be null when $to is null');
+            throw new InvalidRangeException('The $from parameter must be null when $to is null');
         }
-        // Pas sur
         if (is_int($from)) {
             $minimum = $this->hasHeaders ? 1 : 0;
             if ($from < $minimum) {
-                throw new \InvalidArgumentException(sprintf('The $from parameter must be >= %d', $minimum));
+                throw new InvalidRangeException(sprintf('The $from parameter must be >= %d', $minimum));
             }
         }
 
         if (is_int($to) && $from > $to) {
-            throw new \InvalidArgumentException('The $from parameter must be less than or equal to $to');
+            throw new InvalidRangeException('The $from parameter must be less than or equal to $to');
         }
     }
 
-    /**
-     * Provides a generator to iterate over the lines of the file.
-     * It reads each line one by one, applying filters and sanitizers, and yields the valid lines.
-     * This is the most memory-efficient way to read large files.
-     *
-     * @return \Generator<array<int|string, mixed>>
-     */
     public function rows(?int $from = null, ?int $to = null): \Generator
     {
         $this->validateInput($from, $to);
 
-        if (null === $from) {
-            $this->rewind();
-            if ($this->hasHeaders) {
-                $this->current(); // position READ_AHEAD buffer past the header
-            }
+        $this->rewind();
+        if ($this->hasHeaders) {
+            $this->current(); // position READ_AHEAD buffer past the header
         }
 
-        $offset = (null !== $from) ? $this->getRelativeOffset($from) : null;
+        if (null !== $from) {
+            $this->seek($this->getRelativeOffset($from));
+        }
+        $remaining = (null !== $from && null !== $to) ? $to - $from + 1 : null;
 
         while ($this->valid()) {
-            $row = $this->rowAt($offset);
+            $row = $this->rowAt(null);
 
             if (false !== $row) {
                 yield $row;
             }
 
-            if (null !== $offset) {
-                ++$offset;
-
-                if ($offset >= $to) {
+            if (null !== $remaining) {
+                --$remaining;
+                if ($remaining <= 0) {
                     break;
                 }
-            } elseif (!$this->hasHeaders) {
+            }
+
+            if (!$this->hasHeaders) {
                 $this->next();
             }
         }
