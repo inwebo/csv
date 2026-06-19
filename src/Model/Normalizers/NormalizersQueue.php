@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\Csv\Model;
+namespace Inwebo\Csv\Model\Normalizers;
+
+use Inwebo\Csv\Model\ClearableInterface;
 
 /**
  * @extends \SplQueue<callable>
@@ -29,7 +31,8 @@ class NormalizersQueue extends \SplQueue implements ClearableInterface
      */
     public function normalize(array &$row): void
     {
-        call_user_func_array($this->current(), [&$row]);
+        $callable = $this->current();
+        $callable($row);
     }
 
     public function clear(): void
@@ -37,10 +40,5 @@ class NormalizersQueue extends \SplQueue implements ClearableInterface
         while (!$this->isEmpty()) {
             $this->dequeue();
         }
-    }
-
-    public function isNotEmpty(): bool
-    {
-        return !$this->isEmpty();
     }
 }

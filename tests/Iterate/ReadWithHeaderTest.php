@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Inwebo\Csv\Tests\Iterate;
 
-use Inwebo\Csv\Model\FiltersQueue;
-use Inwebo\Csv\Model\NormalizersQueue;
+use Inwebo\Csv\Model\Filters\FiltersQueue;
+use Inwebo\Csv\Model\Normalizers\NormalizersQueue;
 use Inwebo\Csv\Reader;
 use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
 use Inwebo\Csv\Tests\Fixtures\Model\HasReaderTrait;

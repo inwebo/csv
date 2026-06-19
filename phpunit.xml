@@ -31,6 +31,7 @@
               disableCodeCoverageIgnore="true">
         <report>
             <html outputDirectory="html-coverage"/>
+            <clover outputFile="html-coverage/coverage.xml"/>
         </report>
     </coverage>
 
