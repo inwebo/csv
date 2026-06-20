@@ -109,6 +109,12 @@ class Reader extends \SplFileObject implements HasFiltersQueueInterface, HasNorm
             return $row;
         }
 
+        // Fast path: C-level array_combine() when headers are sequential and row is complete.
+        // Falls back to foreach for malformed rows (missing columns → null) or non-sequential indices (manual setHeader() with gaps).
+        if (array_is_list($this->headers) && count($row) === count($this->headers)) {
+            return array_combine($this->headers, $row);
+        }
+
         $buffer = [];
         foreach ($this->headers as $index => $colName) {
             $buffer[$colName] = $row[$index] ?? null;

@@ -31,7 +31,7 @@ class FiltersQueue extends \SplQueue implements ClearableInterface
      */
     public function filter(array $row): bool
     {
-        return call_user_func($this->current(), $row);
+        return ($this->current())($row);
     }
 
     public function clear(): void
