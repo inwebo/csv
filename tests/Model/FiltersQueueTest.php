@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Inwebo\Csv\Tests\Model;
 
-use Inwebo\Csv\Model\FiltersQueue;
+use Inwebo\Csv\Model\Filters\FiltersQueue;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

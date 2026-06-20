@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Inwebo\Csv\Tests\Instance;
 
+use Inwebo\Csv\Model\Filters\FiltersQueue;
+use Inwebo\Csv\Model\Normalizers\NormalizersQueue;
 use Inwebo\Csv\Reader;
 use Inwebo\Csv\Tests\Fixtures\Model\FilesTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Reader::class)]
+#[UsesClass(FiltersQueue::class)]
+#[UsesClass(NormalizersQueue::class)]
 #[Group('csv')]
 #[Group('instantiate')]
 class InstantiateTest extends TestCase
@@ -35,14 +40,21 @@ class InstantiateTest extends TestCase
         $this->assertInstanceOf(Reader::class, $iterator);
     }
 
-    public function testEmpty(): void
+    public function testEmptyWithoutHeaders(): void
     {
-        $reader = (new Reader($this->getEmptyFile(), hasHeaders: false));
+        $reader = new Reader($this->getEmptyFile(), hasHeaders: false);
         $this->assertInstanceOf(Reader::class, $reader);
+        $this->assertCount(0, iterator_to_array($reader->rows()));
+    }
 
-        $rows = iterator_to_array($reader->rows());
-
-        $this->assertCount(0, $rows);
+    public function testEmptyWithHeaders(): void
+    {
+        $reader = new Reader($this->getEmptyFile(), hasHeaders: true);
+        $this->assertInstanceOf(Reader::class, $reader);
+        $this->assertEmpty($reader->getHeaders());
+        $this->assertCount(0, iterator_to_array($reader->rows()));
+        $this->assertFalse($reader->rowAt());
+        $this->assertFalse($reader->rowAt(0));
     }
 
     public function testMalformedCsvRow(): void

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Inwebo\Csv\Tests\Model;
 
-use Inwebo\Csv\Model\NormalizersQueue;
+use Inwebo\Csv\Model\Normalizers\NormalizersQueue;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

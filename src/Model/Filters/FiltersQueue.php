@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Inwebo\Csv\Model;
+namespace Inwebo\Csv\Model\Filters;
+
+use Inwebo\Csv\Model\ClearableInterface;
 
 /**
  * @extends \SplQueue<callable>
@@ -37,10 +39,5 @@ class FiltersQueue extends \SplQueue implements ClearableInterface
         while (!$this->isEmpty()) {
             $this->dequeue();
         }
-    }
-
-    public function isNotEmpty(): bool
-    {
-        return !$this->isEmpty();
     }
 }

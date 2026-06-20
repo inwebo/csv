@@ -1,5 +1,5 @@
 {
-  "name": "inwebo/csv-reader",
+  "name": "inwebo/csv",
   "description": "This PHP class, provides a simple yet powerful way to read and process CSV files. Built as an extension of PHP's SplFileObject, it offers advanced features like column name mapping, data filtering, and sanitization to streamline your CSV processing tasks.",
   "keywords": ["csv-parser", "csv-import", "data-processing", "etl", "file-reader", "spreadsheet", "csv", "reader", "php", "filter", "spl", "sanitize"],
   "homepage": "https://github.com/inwebo/csv-reader",
@@ -13,7 +13,7 @@
   ],
   "type": "library",
   "require": {
-    "php": "^8.1"
+    "php": "^8.3"
   },
   "require-dev": {
     "phpunit/phpunit": "^12.0",
@@ -34,9 +34,9 @@
   },
   "scripts": {
     "php-cs-fixer": "vendor/bin/php-cs-fixer --allow-risky=yes fix",
-    "phpunit": "XDEBUG_MODE=coverage vendor/bin/phpunit --testdox --display-all-issues --no-coverage ",
+    "phpunit": "XDEBUG_MODE=coverage vendor/bin/phpunit --testdox --display-all-issues",
     "phpstan": "vendor/bin/phpstan analyse src -c phpstan.neon",
-    "phpmd": "vendor/bin/phpmd ./src html ./phpmd.rulesets.xml --reportfile phpmd-report.html"
+    "phpmd": "vendor/bin/phpmd ./src html ./phpmd.rulesets.xml --reportfile phpmd-report/index.html"
   },
   "minimum-stability": "stable"
 }
