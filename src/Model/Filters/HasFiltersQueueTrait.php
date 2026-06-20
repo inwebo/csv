@@ -40,13 +40,11 @@ trait HasFiltersQueueTrait
      */
     public function filter(array $row): ?array
     {
-        if (!$this->filtersQueue->isEmpty()) {
-            $this->filtersQueue->rewind();
-            while ($this->filtersQueue->valid()) {
-                if (!$this->filtersQueue->filter($row)) {
+        if (count($this->filtersQueue) > 0) {
+            foreach ($this->filtersQueue as $filter) {
+                if (false === $filter($row)) {
                     return null;
                 }
-                $this->filtersQueue->next();
             }
         }
 

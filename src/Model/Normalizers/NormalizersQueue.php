@@ -31,7 +31,8 @@ class NormalizersQueue extends \SplQueue implements ClearableInterface
      */
     public function normalize(array &$row): void
     {
-        call_user_func_array($this->current(), [&$row]);
+        $callable = $this->current();
+        $callable($row);
     }
 
     public function clear(): void

@@ -35,11 +35,9 @@ trait HasNormalizersQueueTrait
      */
     protected function normalize(array &$row): void
     {
-        if (!$this->normalizersQueue->isEmpty()) {
-            $this->normalizersQueue->rewind();
-            while ($this->normalizersQueue->valid()) {
-                $this->normalizersQueue->normalize($row);
-                $this->normalizersQueue->next();
+        if (count($this->normalizersQueue) > 0) {
+            foreach ($this->normalizersQueue as $normalizer) {
+                $normalizer($row);
             }
         }
     }
