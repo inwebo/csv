@@ -24,12 +24,17 @@ class Reader extends \SplFileObject implements HasFiltersQueueInterface, HasNorm
     use HasFiltersQueueTrait;
     use HasNormalizersQueueTrait;
 
-    private const REQUIRED_FLAGS = \SplFileObject::READ_CSV | \SplFileObject::SKIP_EMPTY | \SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD;
+    private const int REQUIRED_FLAGS = \SplFileObject::READ_CSV | \SplFileObject::SKIP_EMPTY | \SplFileObject::DROP_NEW_LINE | \SplFileObject::READ_AHEAD;
 
     /** @var array<int, string> */
     private array $headers = [];
 
+    /**
+     * @var bool defaults to true
+     */
     private readonly bool $hasHeaders;
+    private readonly bool $headersIsList;
+    private readonly int $headerCount;
 
     /**
      * Creates a new instance of the Reader class and initializes the CSV file for processing.
@@ -58,6 +63,9 @@ class Reader extends \SplFileObject implements HasFiltersQueueInterface, HasNorm
         $this->normalizersQueue = new NormalizersQueue();
         $this->filtersQueue = new FiltersQueue();
         $this->hasHeaders = $hasHeaders;
+
+        $this->headersIsList = array_is_list($this->headers);
+        $this->headerCount = count($this->headers);
 
         if (true === $this->hasHeaders) {
             /** @var array<int, string>|false|string $colName */
@@ -111,7 +119,7 @@ class Reader extends \SplFileObject implements HasFiltersQueueInterface, HasNorm
 
         // Fast path: C-level array_combine() when headers are sequential and row is complete.
         // Falls back to foreach for malformed rows (missing columns → null) or non-sequential indices (manual setHeader() with gaps).
-        if (array_is_list($this->headers) && count($row) === count($this->headers)) {
+        if ($this->headersIsList && count($row) === $this->headerCount) {
             return array_combine($this->headers, $row);
         }
 

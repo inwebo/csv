@@ -7,7 +7,7 @@ namespace Inwebo\Csv\Model\Filters;
 trait HasFiltersQueueTrait
 {
     /**
-     * @var FiltersQueue<callable(array<int|string, ?string>):bool>
+     * @var FiltersQueue<callable(array<int|string, mixed>):bool>
      */
     private FiltersQueue $filtersQueue;
 

@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/phpbench/phpbench/master/phpbench.schema.json",
+    "runner.bootstrap": "vendor/autoload.php",
+    "runner.path": "benchmarks",
+    "runner.revs": 3,
+    "runner.iterations": 3,
+    "runner.warmup": 1,
+    "storage.xml_storage_path": ".phpbench",
+    "report.outputs": {
+        "html": {
+            "extends": "html",
+            "file": "benchmark-results/index.html"
+        }
+    }
+}

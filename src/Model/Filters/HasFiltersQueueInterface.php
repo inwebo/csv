@@ -7,7 +7,7 @@ namespace Inwebo\Csv\Model\Filters;
 interface HasFiltersQueueInterface
 {
     /**
-     * @return FiltersQueue<callable(array<int|string, ?string>):bool>
+     * @return FiltersQueue<callable(array<int|string, mixed>):bool>
      */
     public function getFiltersQueue(): FiltersQueue;
 
@@ -15,7 +15,7 @@ interface HasFiltersQueueInterface
      * Adds a filter applied to each row before it is written.
      * If any filter returns false, the row is skipped. Filters are executed in FIFO order.
      *
-     * @param callable(array<int|string, ?string>):bool $callable
+     * @param callable(array<int|string, mixed>):bool $callable
      */
     public function pushFilter(callable $callable): static;
 

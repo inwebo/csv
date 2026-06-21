@@ -7,7 +7,7 @@ namespace Inwebo\Csv\Model\Normalizers;
 trait HasNormalizersQueueTrait
 {
     /**
-     * @var NormalizersQueue<callable(array<int|string, ?string> &$row):void>
+     * @var NormalizersQueue<callable(array<int|string, mixed>):void>
      */
     private NormalizersQueue $normalizersQueue;
 

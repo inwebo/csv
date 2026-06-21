@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## 2.0.0
+
+### Added
+* `Writer` — nouvelle classe symétrique à `Reader` pour l'écriture de CSV
+* `ReaderInterface` et `WriterInterface` — contrats publics pour `Reader` et `Writer`
+* `HasFiltersQueueInterface` / `HasFiltersQueueTrait` — filtre extraits en interface + trait réutilisable
+* `HasNormalizersQueueInterface` / `HasNormalizersQueueTrait` — idem pour les normalizers
+* Hiérarchie d'exceptions : `CsvException` (base) → `InvalidRangeException`, `BadArgumentException`, `WriteException`
+* `Reader::setFlags()` — valide que les flags `READ_CSV|SKIP_EMPTY|DROP_NEW_LINE|READ_AHEAD` sont préservés
+* `Reader::$headersIsList` et `Reader::$headerCount` — valeurs invariantes calculées une seule fois au constructeur
+
+### Changed
+* **[BREAKING]** `FiltersQueue` déplacé : `Inwebo\Csv\Model\FiltersQueue` → `Inwebo\Csv\Model\Filters\FiltersQueue`
+* **[BREAKING]** `NormalizersQueue` déplacé : `Inwebo\Csv\Model\NormalizersQueue` → `Inwebo\Csv\Model\Normalizers\NormalizersQueue`
+* **[BREAKING]** Constructeur `Reader` : suppression des paramètres `$mode` et `$context` (le mode `'r'` est fixe)
+* **[BREAKING]** `rows()` lève désormais `InvalidRangeException` au lieu de `\InvalidArgumentException`
+* `Reader` implémente `HasFiltersQueueInterface`, `HasNormalizersQueueInterface`, `ReaderInterface` via traits
+* `private const REQUIRED_FLAGS` typé explicitement en `int` (PHP 8.3+)
+* Types PHPDoc des callables : `callable(array<int|string, ?string>)` → `callable(array<int|string, mixed>)` (correction de contravariance)
+
+### Fixed
+* `call_user_func` / `call_user_func_array` remplacés par l'invocation directe dans `FiltersQueue` et `NormalizersQueue` — gain mesuré de **−43 %** sur `filter()` et **−36 %** sur `normalize()` (100 000 lignes, Callgrind)
+* `setHeadersRow()` : `array_is_list($headers)` et `count($headers)` mis en cache au constructeur — supprime deux appels par ligne
+* `FiltersQueue::isNotEmpty()` supprimé (redondant avec `isEmpty()`)
+
+### Performance
+* Lecture bornée (`rows($from, $to)`) : un seul `seek()` au début au lieu de `seek()` à chaque ligne — complexité O(N) au lieu de O(N²)
+  * `benchLargeFile` medium : **94 260 ms → 25 ms** (×3 770)
+  * `benchFiltering` large : **−16 %**, `benchNormalization` medium : **−18 %**
+
 ## 1.1.1
 
 ### Added

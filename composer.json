@@ -19,7 +19,8 @@
     "phpunit/phpunit": "^12.0",
     "friendsofphp/php-cs-fixer": "^3.72",
     "phpstan/phpstan": "^2.1",
-    "phpmd/phpmd": "^2.15"
+    "phpmd/phpmd": "^2.15",
+    "phpbench/phpbench": "^1.7"
   },
   "license": "MIT",
   "autoload": {
@@ -36,7 +37,13 @@
     "php-cs-fixer": "vendor/bin/php-cs-fixer --allow-risky=yes fix",
     "phpunit": "XDEBUG_MODE=coverage vendor/bin/phpunit --testdox --display-all-issues",
     "phpstan": "vendor/bin/phpstan analyse src -c phpstan.neon",
-    "phpmd": "vendor/bin/phpmd ./src html ./phpmd.rulesets.xml --reportfile phpmd-report/index.html"
+    "phpmd": "vendor/bin/phpmd ./src html ./phpmd.rulesets.xml --reportfile phpmd-report/index.html",
+    "phpbench": "XDEBUG_MODE=off vendor/bin/phpbench run benchmarks/ --report=aggregate",
+    "phpbench-html": "XDEBUG_MODE=off vendor/bin/phpbench run benchmarks/ --report=aggregate --output=html",
+    "phpbench-compare": "XDEBUG_MODE=off vendor/bin/phpbench run benchmarks/ --report=compare --ref=v1"
+  },
+  "config": {
+    "process-timeout": 0
   },
   "minimum-stability": "stable"
 }
